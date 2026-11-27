@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch cancels the run that is still going
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least privilege: this workflow only needs to read the code
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: API (lint, types, tests, OpenAPI)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v7
+
+      # Installs uv; the Python version comes from api/.python-version
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+          cache-dependency-glob: api/uv.lock
+
+      # --locked: fail if pyproject.toml and uv.lock disagree
+      - run: uv sync --locked
+      - run: uv run ruff format --check .
+      - run: uv run ruff check .
+      - run: uv run pyright
+      # Integration tests start PostgreSQL + pgvector in Docker (available on GitHub runners)
+      - run: uv run pytest
+
+      # The committed schema must match the code, otherwise the web client is out of date
+      - name: OpenAPI schema is up to date
+        run: |
+          uv run python -m scripts.export_openapi
+          git diff --exit-code openapi.json
+
+  web:
+    name: Web (format, types, tests, build, API client)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+
+      # Installs the pnpm version from "packageManager" in web/package.json
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: web/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: web/.nvmrc
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      # The generated client must match the committed OpenAPI schema
+      - name: Generated API client is up to date
+        run: |
+          pnpm api:generate
+          git diff --exit-code src/lib/api/generated
+
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
