@@ -12,7 +12,8 @@ httpx, testcontainers).
 uv run poe dev                            # database (docker compose) + migrations + API with reload on :8000
 uv run poe check                          # format check, lint, pyright, tests (same as CI)
 uv run poe format                         # format + auto-fix lint
-uv run poe test                           # all tests (integration ones need Docker)
+uv run poe test                           # all tests (integration ones need Docker), except `model`
+uv run poe test-model                     # tests with the real embedding model (~1 GB download once)
 uv run poe migrate                        # alembic upgrade head
 uv run poe openapi                        # refresh openapi.json for the web client
 uv run pytest -m "not integration"        # fast unit tests only

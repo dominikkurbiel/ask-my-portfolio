@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -16,6 +17,12 @@ class Settings(BaseSettings):
     environment: Literal["development", "test", "production"] = "development"
     database_url: str = "postgresql+psycopg://portfolio:portfolio@localhost:5434/ask_my_portfolio"
     log_level: str = "INFO"
+
+    # Local multilingual embedding model (fastembed). Changing it means re-indexing everything.
+    embedding_model: str = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+    # Where downloaded models are kept (outside the repo, survives restarts)
+    embedding_cache_dir: Path = Path.home() / ".cache" / "ask-my-portfolio" / "fastembed"
+
 
 
 @lru_cache

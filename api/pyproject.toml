@@ -6,6 +6,7 @@ requires-python = ">=3.13"
 dependencies = [
     "alembic>=1.20.1",
     "fastapi>=0.165.0",
+    "fastembed>=0.9.1",
     "pgvector>=0.5.1",
     "psycopg[binary]>=3.3.9",
     "pydantic-settings>=2.16.3",
@@ -46,6 +47,10 @@ cmd = "alembic upgrade head"
 help = "Run all tests (integration tests need Docker)"
 cmd = "pytest"
 
+[tool.poe.tasks.test-model]
+help = "Run the tests that use the real embedding model (downloads it on first run)"
+cmd = "pytest -m model"
+
 [tool.poe.tasks.format]
 help = "Format the code and fix what ruff can fix"
 sequence = ["ruff format .", "ruff check --fix ."]
@@ -85,4 +90,9 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
 testpaths = ["tests"]
-markers = ["integration: needs Docker (starts a real PostgreSQL with pgvector)"]
+# Real-model tests are slow and download ~1 GB: run them on purpose with `poe test-model`
+addopts = "-m 'not model'"
+markers = [
+    "integration: needs Docker (starts a real PostgreSQL with pgvector)",
+    "model: uses the real embedding model (downloaded on first run)",
+]
