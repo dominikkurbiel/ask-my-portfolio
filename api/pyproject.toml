@@ -1,0 +1,88 @@
+[project]
+name = "ask-my-portfolio-api"
+version = "0.1.0"
+description = "API of Ask my portfolio: RAG assistant answering questions about my work"
+requires-python = ">=3.13"
+dependencies = [
+    "alembic>=1.20.1",
+    "fastapi>=0.165.0",
+    "pgvector>=0.5.1",
+    "psycopg[binary]>=3.3.9",
+    "pydantic-settings>=2.16.3",
+    "sqlalchemy[asyncio]>=2.1.9",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.29.0",
+    "poethepoet>=0.49.0",
+    "pyright>=1.1.414",
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.5.0",
+    "ruff>=0.17.6",
+    "testcontainers[postgres]>=4.15.0",
+]
+
+[tool.uv]
+# An application, not a library: nothing to build or publish
+package = false
+
+# Tasks, like "scripts" in package.json. Run with: uv run poe <task>  (list: uv run poe)
+[tool.poe.tasks.dev]
+help = "Start the database, apply migrations and run the API with auto-reload"
+sequence = [
+    # --wait: return only when the database healthcheck passes
+    { cmd = "docker compose -f ../docker-compose.yml up -d --wait" },
+    { ref = "migrate" },
+    { cmd = "uvicorn app.main:app --reload" },
+]
+
+[tool.poe.tasks.migrate]
+help = "Apply database migrations"
+cmd = "alembic upgrade head"
+
+[tool.poe.tasks.test]
+help = "Run all tests (integration tests need Docker)"
+cmd = "pytest"
+
+[tool.poe.tasks.format]
+help = "Format the code and fix what ruff can fix"
+sequence = ["ruff format .", "ruff check --fix ."]
+default_item_type = "cmd"  # plain strings are shell commands, not task names
+
+[tool.poe.tasks.check]
+help = "Everything CI checks: format, lint, types, tests"
+sequence = ["ruff format --check .", "ruff check .", "pyright", "pytest"]
+default_item_type = "cmd"
+
+[tool.poe.tasks.openapi]
+help = "Export the OpenAPI schema to openapi.json (then run pnpm api:generate in web/)"
+cmd = "python -m scripts.export_openapi"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+# E/F: errors, I: import order, UP: modern syntax, B: likely bugs,
+# ASYNC: blocking calls in async code, S: security, SIM: simplifications, RUF: ruff's own rules
+select = ["E", "F", "I", "UP", "B", "ASYNC", "S", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# assert is how pytest checks things
+"tests/**" = ["S101"]
+
+[tool.pyright]
+typeCheckingMode = "strict"
+pythonVersion = "3.13"
+venvPath = "."
+venv = ".venv"
+include = ["app", "tests", "alembic", "scripts"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+markers = ["integration: needs Docker (starts a real PostgreSQL with pgvector)"]
