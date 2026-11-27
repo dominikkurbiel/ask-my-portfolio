@@ -10,7 +10,11 @@ quality (evals) matter more than shipping fast.
 - `web/`: Next.js 16, TanStack Query, client generated from OpenAPI. Rules in `web/CLAUDE.md`.
 - `docker-compose.yml`: PostgreSQL 17 + pgvector for development (host port 5434).
 - `.github/workflows/ci.yml`: must stay green.
-- Planned: `content/` (public CV/about markdown), `evals/` (test questions), `sources.yaml` (repos to index).
+- `content/`: the real CV and about-me markdown. **Private: git-ignored, never commit it**, never copy
+  its text into code, tests, fixtures or docs. It reaches the server through a deploy step.
+- `content.example/`: public, fictional sample content (Jane Doe) for tests, CI and local runs.
+  Tests must use it (or inline fixtures), never `content/`. Point the app at it with `CONTENT_DIR`.
+- Planned: `evals/` (test questions), `sources.yaml` (repos to index).
 
 ## Commands
 
@@ -39,11 +43,19 @@ cd api && uv run poe check   # everything CI checks on the API (list all tasks: 
 - Conventional Commits: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`, `ci:`, `build:`,
   scoped when it helps (`feat(api): ...`, `feat(web): ...`). One logical change per commit.
 - One branch + pull request per roadmap stage; keep the README roadmap up to date.
-- Tests first for domain logic: write the failing test before the implementation.
+- **Tests first for domain logic** (chunking, costs, budget, citations, retrieval fusion, eval
+  metrics, rate limiting...): describe the expected behaviour to the `test-writer` subagent, review
+  the failing tests, commit them (`test(api): specify ...`), then implement until they pass
+  (`feat(api): ...`). Glue code (endpoint wiring, config, migrations) gets its tests together with
+  the implementation.
 
 ## Before finishing a task
 
-1. API: `uv run ruff format --check . && uv run ruff check . && uv run pyright && uv run pytest`
+1. API: `uv run poe check` (format, lint, pyright, tests)
 2. Web: `pnpm format:check && pnpm typecheck && pnpm test && pnpm build`
 3. OpenAPI schema and generated client are up to date (see above).
-4. Don't commit, push or open a PR unless asked.
+4. **Review before every pull request:** run the `code-reviewer` subagent on the branch's changes.
+   When the changes touch LLM calls, prompts, ingestion, admin or auth, also run `security-reviewer`
+   (once it exists). Fix the important findings, and list what was reviewed and fixed in the PR
+   description.
+5. Don't commit, push or open a PR unless asked.
