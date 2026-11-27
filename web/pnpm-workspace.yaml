@@ -1,0 +1,5 @@
+# pnpm settings (single package, no workspace packages)
+# Dependency build scripts are denied by default; allow one only when it is really needed.
+allowBuilds:
+  # esbuild ships prebuilt binaries as optional dependencies; its postinstall is not needed
+  esbuild: false
