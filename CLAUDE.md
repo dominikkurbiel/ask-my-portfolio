@@ -10,7 +10,11 @@ quality (evals) matter more than shipping fast.
 - `web/`: Next.js 16, TanStack Query, client generated from OpenAPI. Rules in `web/CLAUDE.md`.
 - `docker-compose.yml`: PostgreSQL 17 + pgvector for development (host port 5434).
 - `.github/workflows/ci.yml`: must stay green.
-- Planned: `content/` (public CV/about markdown), `evals/` (test questions), `sources.yaml` (repos to index).
+- `content/`: the real CV and about-me markdown. **Private: git-ignored, never commit it**, never copy
+  its text into code, tests, fixtures or docs. It reaches the server through a deploy step.
+- `content.example/`: public, fictional sample content (Jane Doe) for tests, CI and local runs.
+  Tests must use it (or inline fixtures), never `content/`. Point the app at it with `CONTENT_DIR`.
+- Planned: `evals/` (test questions), `sources.yaml` (repos to index).
 
 ## Commands
 

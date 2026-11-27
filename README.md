@@ -35,6 +35,7 @@ Once, after cloning:
 
 ```bash
 cp .env.example .env
+cp -r content.example content   # sample content; replace it with your own CV (see below)
 cd web && pnpm install
 ```
 
@@ -48,6 +49,16 @@ cd web && pnpm dev          # web on http://localhost:3001
 `uv run` installs Python 3.13 and the dependencies on first use. API docs: http://localhost:8000/api/docs.
 Other API tasks (`check`, `test`, `format`, `openapi`, ...): `cd api && uv run poe`.
 
+## Your own content
+
+The assistant answers from the markdown files in `content/`. That folder is **git-ignored**: the
+code is public, but my real CV and about-me are deployed to the server only, so they can't be bulk
+downloaded from the repository and can be changed without leaving a trace in git history.
+
+`content.example/` holds fictional sample content (Jane Doe) used by tests and CI. To run the
+assistant about yourself, put your own `cv.md` and `about.md` in `content/` (the sample folder's
+README explains how to structure them).
+
 ## Project structure
 
 ```
@@ -55,6 +66,8 @@ api/                 FastAPI modular monolith (app/modules/<feature>/), Alembic 
   openapi.json       API contract, exported from FastAPI and committed
 web/                 Next.js app
   src/lib/api/generated/   typed client + TanStack Query hooks generated from openapi.json
+content/             real content (private, git-ignored)
+content.example/     public sample content for tests and local runs
 docker-compose.yml   local PostgreSQL + pgvector
 ```
 

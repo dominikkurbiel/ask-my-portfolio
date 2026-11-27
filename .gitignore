@@ -34,3 +34,7 @@ build/
 
 # personal Claude Code notes
 CLAUDE.local.md
+
+# Real portfolio content (CV, about me) stays private: it is deployed to the server, never committed.
+# Public sample content lives in content.example/
+/content/

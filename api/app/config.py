@@ -4,6 +4,8 @@ from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
 
 class Settings(BaseSettings):
     """Configuration read from environment variables (and a .env file in development)."""
@@ -23,6 +25,9 @@ class Settings(BaseSettings):
     # Where downloaded models are kept (outside the repo, survives restarts)
     embedding_cache_dir: Path = Path.home() / ".cache" / "ask-my-portfolio" / "fastembed"
 
+    # Markdown content to index (CV, about me). The real content/ folder is private and
+    # git-ignored; tests and CI point this at the public content.example/ folder.
+    content_dir: Path = REPO_ROOT / "content"
 
 
 @lru_cache
