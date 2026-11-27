@@ -1,0 +1,22 @@
+# Local development services. Run: docker compose up -d
+services:
+  postgres:
+    # PostgreSQL 17 with the pgvector extension preinstalled
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: portfolio
+      POSTGRES_PASSWORD: portfolio
+      POSTGRES_DB: ask_my_portfolio
+    ports:
+      # 5434 on the host, so it doesn't clash with other local Postgres instances
+      - "5434:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portfolio -d ask_my_portfolio"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres-data:
